@@ -5,16 +5,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  ToastAndroid,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {COLOURS, Items} from '../databases/Database';
+import {COLOURS} from '../databases/Database';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const MyCart = ({navigation}) => {
   const [product, setProduct] = useState();
   const [total, setTotal] = useState(null);
-
-
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       getDataFromDB();
@@ -25,53 +24,57 @@ const MyCart = ({navigation}) => {
 
   //get data from local DB by ID
   const getDataFromDB = async () => {
-    let items = await AsyncStorage.getItem('cartItems');
-    
-    items = JSON.parse(items);
-    let productData = [];
-    if (items) {
-      items.forEach(data => {
-        if (items.includes(data.id)) {
-          productData.push(data);
-          return;
-        }
-      });
-      setProduct(productData);
-      getTotal(productData);
-      console.log(productData);
-    } else {
-      setProduct(false);
-      getTotal(false);
+    try {
+      const items = await AsyncStorage.getItem('cartItems');
+      const itemArray = JSON.parse(items);
+
+      if (itemArray) {
+        const productData = await Promise.all(
+          itemArray.map(async (productId) => {
+            const response = await fetch(`https://fakestoreapi.com/products/${productId}`);
+            const productInfo = await response.json();
+            return productInfo;
+          })
+        );
+
+        setProduct(productData);
+        getTotal(productData);
+      } else {
+        setProduct([]);
+        setTotal(null);
+      }
+    } catch (error) {
+      console.error('Error fetching data from API:', error);
     }
   };
 
   //get total price of all items in the cart
-  const getTotal = productData => {
-    let total = 0;
-    for (let index = 0; index < productData.length; index++) {
-      let productPrice = productData[index].productPrice;
-      total = total + productPrice;
-    }
+  const getTotal = (productData) => {
+    const total = productData.reduce((acc, product) => acc + product.price, 0);
     setTotal(total);
   };
 
   //remove data from Cart
 
-  const removeItemFromCart = async id => {
-    let itemArray = await AsyncStorage.getItem('cartItems');
-    itemArray = JSON.parse(itemArray);
-    if (itemArray) {
-      let array = itemArray;
-      for (let index = 0; index < array.length; index++) {
-        if (array[index] == id) {
-          array.splice(index, 1);
-        }
+  const removeItemFromCart = async (id) => {
+    try {
+      let itemArray = await AsyncStorage.getItem('cartItems');
+      itemArray = JSON.parse(itemArray);
 
-        await AsyncStorage.setItem('cartItems', JSON.stringify(array));
+      if (itemArray) {
+        const updatedArray = itemArray.filter((itemId) => itemId !== id);
+        await AsyncStorage.setItem('cartItems', JSON.stringify(updatedArray));
         getDataFromDB();
+        ToastAndroid.show(
+          'Item Delete Successfully from cart',
+          ToastAndroid.SHORT,
+        );
       }
+    } catch (error) {
+      console.error('Error removing item from cart:', error);
     }
   };
+
 
   //checkout
 
@@ -81,16 +84,13 @@ const MyCart = ({navigation}) => {
     } catch (error) {
       return error;
     }
-
-    ToastAndroid.show('Items will be Deliverd SOON!', ToastAndroid.SHORT);
-
-    navigation.navigate('Home');
+    navigation.navigate('Payment');
   };
 
   const renderProducts = (data, index) => {
     return (
       <TouchableOpacity
-        key={data.key}
+        key={data.item}
         onPress={() => navigation.navigate('ProductInfo', {productID: data.id})}
         style={{
           width: '100%',
@@ -111,7 +111,7 @@ const MyCart = ({navigation}) => {
             marginRight: 22,
           }}>
           <Image
-            source={data.image}
+            source={{ uri: data.image }}
             style={{
               width: '100%',
               height: '100%',
@@ -134,7 +134,7 @@ const MyCart = ({navigation}) => {
                 fontWeight: '600',
                 letterSpacing: 1,
               }}>
-              {data.productName}
+              {data.title}
             </Text>
             <View
               style={{
@@ -150,10 +150,10 @@ const MyCart = ({navigation}) => {
                   maxWidth: '85%',
                   marginRight: 4,
                 }}>
-                &#8363;{data.price}
+                &#8377;{data.price}
               </Text>
               <Text>
-                (~&#8363;
+                (~&#8377;
                 {data.price + data.price / 20})
               </Text>
             </View>
@@ -341,7 +341,7 @@ const MyCart = ({navigation}) => {
                       lineHeight: 20,
                       opacity: 0.5,
                     }}>
-                    9/18 , District 9, Ho Chi Minh City
+                    0162, Tbilisi
                   </Text>
                 </View>
               </View>
@@ -465,7 +465,7 @@ const MyCart = ({navigation}) => {
                   color: COLOURS.black,
                   opacity: 0.8,
                 }}>
-                &#8363;{total}.00
+                &#8377;{total}.00
               </Text>
             </View>
             <View
@@ -492,7 +492,7 @@ const MyCart = ({navigation}) => {
                   color: COLOURS.black,
                   opacity: 0.8,
                 }}>
-                &#8363;{total / 20}
+                &#8377;{total / 20}
               </Text>
             </View>
             <View
@@ -517,7 +517,7 @@ const MyCart = ({navigation}) => {
                   fontWeight: '500',
                   color: COLOURS.black,
                 }}>
-                &#8363;{total + total / 20}
+                &#8377;{total + total / 20}
               </Text>
             </View>
           </View>
@@ -551,7 +551,7 @@ const MyCart = ({navigation}) => {
               color: COLOURS.white,
               textTransform: 'uppercase',
             }}>
-            CHECKOUT (&#8363;{total + total / 20} )
+            CHECKOUT (&#8377;{total + total / 20} )
           </Text>
         </TouchableOpacity>
       </View>

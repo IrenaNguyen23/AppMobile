@@ -9,11 +9,12 @@ import {
   Image,
   Dimensions,
   Animated,
+  ToastAndroid,
 } from 'react-native';
+import { COLOURS, Items } from '../databases/Database';
 import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { COLOURS, Items } from '../databases/Database';
 
 const ProductInfo = ({ route, navigation }) => {
   const { productID } = route.params;
@@ -27,12 +28,6 @@ const ProductInfo = ({ route, navigation }) => {
   let position = Animated.divide(scrollX, width);
 
   useEffect(() => {
-    fetch(`https://fakestoreapi.com/products/${productID}`)
-      .then(res => res.json())
-      .then(json => setProduct(json))
-  }, [navigation]);
-
-  useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       getDataFromDB();
     });
@@ -43,11 +38,16 @@ const ProductInfo = ({ route, navigation }) => {
   //get product data by productID
 
   const getDataFromDB = async () => {
-    for (let index = 0; index < product.length; index++) {
-      if (product[index].id == productID) {
-        await setProduct(product[index]);
-        return;
+    try {
+      const response = await fetch(`https://fakestoreapi.com/products/${productID}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch product data');
       }
+
+      const productData = await response.json();
+      setProduct(productData);
+    } catch (error) {
+      console.error('Error fetching product data:', error);
     }
   };
 
@@ -84,25 +84,7 @@ const ProductInfo = ({ route, navigation }) => {
         return error;
       }
     }
-    console.log("asdf:"+ itemArray);
   };
-
-  const checkIfItemExists = async (itemId) => {
-    try {
-      const items = await AsyncStorage.getItem('cartItems');
-      const parsedItems = JSON.parse(items);
-      
-      if (parsedItems && parsedItems.includes(itemId)) {
-        console.log('Sản phẩm đã có trong giỏ hàng.');
-      } else {
-        console.log('Sản phẩm chưa có trong giỏ hàng.');
-      }
-    } catch (error) {
-      console.log('Lỗi khi kiểm tra sản phẩm trong giỏ hàng:', error);
-    }
-  };
-  console.log(checkIfItemExists(productID));
-
 
   //product horizontal scroll product card
   const renderProduct = ({ item, index }) => {
@@ -172,7 +154,7 @@ const ProductInfo = ({ route, navigation }) => {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={product.productImageList ? product.productImageList : null}
+            data={product ? [product.image] : []}
             horizontal
             renderItem={renderProduct}
             showsHorizontalScrollIndicator={false}
@@ -181,7 +163,7 @@ const ProductInfo = ({ route, navigation }) => {
             bounces={false}
             onScroll={Animated.event(
               [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-              { useNativeDriver: false },
+              { useNativeDriver: false }
             )}
           />
           <View
@@ -192,39 +174,26 @@ const ProductInfo = ({ route, navigation }) => {
               justifyContent: 'center',
               marginBottom: 16,
               marginTop: 32,
-            }}>
-            {product.productImageList
-              ? product.productImageList.map((data, index) => {
-                let opacity = position.interpolate({
-                  inputRange: [index - 1, index, index + 1],
-                  outputRange: [0.2, 1, 0.2],
-                  extrapolate: 'clamp',
-                });
-                return (
-                  <Animated.View
-                    key={index}
-                    style={{
-                      width: '16%',
-                      height: 2.4,
-                      backgroundColor: COLOURS.black,
-                      opacity,
-                      marginHorizontal: 4,
-                      borderRadius: 100,
-                    }}></Animated.View>
-                );
-              })
-              : null}
+            }}
+          >
+            {product ? (
+              <Animated.View
+                style={{
+                  width: '16%',
+                  height: 2.4,
+                  backgroundColor: COLOURS.black,
+                  opacity: scrollX.interpolate({
+                    inputRange: [-width, 0, width],
+                    outputRange: [0.2, 1, 0.2],
+                    extrapolate: 'clamp',
+                  }),
+                  marginHorizontal: 4,
+                  borderRadius: 100,
+                }}
+              />
+            ) : null}
           </View>
         </View>
-        {/* tu them */}
-        <Image
-          source={{ uri: product.image }}
-          style={{
-            width: '100%',
-            height: '100%',
-            resizeMode: 'contain',
-          }}
-        />
         <View
           style={{
             paddingHorizontal: 16,
@@ -354,8 +323,8 @@ const ProductInfo = ({ route, navigation }) => {
               &#8377; {product.price}.00
             </Text>
             <Text>
-              Tax Rate 2%~ &#8377;{product.price / 20} (&#8377;
-              {product.productPrice + product.price / 20})
+              Tax Rate 2%~ &#8377;{product.productPrice / 20} (&#8377;
+              {product.productPrice + product.productPrice / 20})
             </Text>
           </View>
         </View>
@@ -371,10 +340,8 @@ const ProductInfo = ({ route, navigation }) => {
           alignItems: 'center',
         }}>
         <TouchableOpacity
-/*           onPress={() => (product.isAvailable ? addToCart(product.id) : null)}
- */         
-            onPress={()=>addToCart(product.id)}
-            style={{
+          onPress={() => (addToCart(product.id))}
+          style={{
             width: '86%',
             height: '90%',
             backgroundColor: COLOURS.blue,
@@ -390,8 +357,7 @@ const ProductInfo = ({ route, navigation }) => {
               color: COLOURS.white,
               textTransform: 'uppercase',
             }}>
-            {/* {product.isAvailable ? 'Add to cart' : 'Not Avialable'} */}
-            Add to Cart
+            Add to cart
           </Text>
         </TouchableOpacity>
       </View>
