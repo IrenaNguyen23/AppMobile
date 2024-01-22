@@ -1,228 +1,87 @@
+import axios from 'axios';
+import { Box, Button, Center, FormControl, Heading, Input, VStack } from 'native-base';
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { Alert } from 'react-native';
 
-const RegisterScreen = () => {
+const RegisterScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [firstname, setFirstname] = useState('');
-    const [lastname, setLastname] = useState('');
-    const [city, setCity] = useState('');
-    const [street, setStreet] = useState('');
-    const [number, setNumber] = useState('');
-    const [zipcode, setZipcode] = useState('');
-    const [lat, setLat] = useState('');
-    const [long, setLong] = useState('');
-    const [phone, setPhone] = useState('');
+    const [confirmpw, setConfirmPw] = useState('');
 
-    const handleRegister = async () => {
-        try {
-            const response = await fetch('https://fakestoreapi.com/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    username: username,
-                    password: password,
-                    name: {
-                        firstname: firstname,
-                        lastname: lastname,
-                    },
-                    address: {
-                        city: city,
-                        street: street,
-                        number: number,
-                        zipcode: zipcode,
-                        geolocation: {
-                            lat: lat,
-                            long: long,
-                        },
-                    },
-                    phone: phone,
-                }),
-            });
+    const handleRegister = () => {
+        let formData = {
+            email: email,
+            username: username,
+            password: password,
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Đăng ký thành công. Thông tin người dùng:', data);
-                navigation.navigate('Login');
-                // Xử lý khi đăng ký thành công, ví dụ: điều hướng đến màn hình chính
-            } else {
-                console.log('Đăng ký thất bại');
-                // Xử lý khi đăng ký thất bại, ví dụ: hiển thị thông báo lỗi
-                Alert.alert('Đăng ký thất bại', 'Vui lòng kiểm tra lại thông tin đăng ký.');
-            }
-        } catch (error) {
-            console.error('Lỗi khi đăng ký:', error);
         }
-    };
-
-    return (
-        <View style={styles.container}>
-            <View style={styles.row}>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Email:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập email"
+        if (!email || !username || !password || !confirmpw) {
+            Alert.alert(` Vui lòng điền đầy đủ thông tin.`);
+            return;
+          }
+        if (password !== confirmpw) {
+            Alert.alert(` Mật khẩu và xác nhận mật khẩu không trùng khớp.`);
+            return;
+        }
+        // Gửi yêu cầu đăng nhập đến API
+        axios.post('https://65a998da219bfa3718698359.mockapi.io/user/auth', formData)
+            .then((response) => {
+                if (response.data) {
+                    Alert.alert(` Đăng ký thành công! `);
+                    navigation.navigate('Login');
+                }
+            })
+            .catch((err) => console.log(err))
+    }
+    return <Center w="100%">
+        <Box safeArea p="2" w="90%" maxW="290" py="8">
+            <Heading size="lg" color="coolGray.800" _dark={{
+                color: "warmGray.50"
+            }} fontWeight="semibold">
+                Welcome
+            </Heading>
+            <Heading mt="1" color="coolGray.600" _dark={{
+                color: "warmGray.200"
+            }} fontWeight="medium" size="xs">
+                Sign up to continue!
+            </Heading>
+            <VStack space={3} mt="5">
+                <FormControl>
+                    <FormControl.Label>Email</FormControl.Label>
+                    <Input
                         onChangeText={(text) => setEmail(text)}
                         value={email}
                     />
-                </View>
-            </View>
-            <View style={styles.row}>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Username:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập tên đăng nhập"
+                </FormControl>
+                <FormControl>
+                    <FormControl.Label>User Name</FormControl.Label>
+                    <Input
                         onChangeText={(text) => setUsername(text)}
                         value={username}
                     />
-                </View>
-            </View>
+                </FormControl>
+                <FormControl>
+                    <FormControl.Label>Password</FormControl.Label>
+                    <Input type="password"
 
-            <View style={styles.row}>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Password:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập mật khẩu"
-                        secureTextEntry
                         onChangeText={(text) => setPassword(text)}
                         value={password}
                     />
-                </View>
-            </View>
-            <View style={styles.row}>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>First Name:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập tên"
-                        onChangeText={(text) => setFirstname(text)}
-                        value={firstname}
+                </FormControl>
+                <FormControl>
+                    <FormControl.Label>Confirm Password</FormControl.Label>
+                    <Input type="password"
+                        onChangeText={(text) => setConfirmPw(text)}
+                        value={confirmpw}
                     />
-                </View>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Last Name:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập họ"
-                        onChangeText={(text) => setLastname(text)}
-                        value={lastname}
-                    />
-                </View>
-            </View>
-
-            <View style={styles.row}>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>City:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập thành phố"
-                        onChangeText={(text) => setCity(text)}
-                        value={city}
-                    />
-
-                </View>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Street:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập đường"
-                        onChangeText={(text) => setStreet(text)}
-                        value={street}
-                    />
-                </View>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Number:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập số nhà"
-                        onChangeText={(text) => setNumber(text)}
-                        value={number}
-                    />
-                </View>
-            </View>
-
-            <View style={styles.row}>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Zipcode:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập mã bưu chính"
-                        onChangeText={(text) => setZipcode(text)}
-                        value={zipcode}
-                    />
-
-                </View>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Latitude:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập vĩ độ"
-                        onChangeText={(text) => setLat(text)}
-                    />
-                </View>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Longitude:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập kinh độ"
-                        onChangeText={(text) => setLong(text)}
-                        value={long}
-                    />
-                </View>
-            </View>
-
-            <View style={styles.row}>
-                <View style={styles.halfInput}>
-                    <Text style={styles.label}>Phone:</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nhập số điện thoại"
-                        onChangeText={(text) => setPhone(text)}
-                        value={phone}
-                    />
-                </View>
-            </View>
-
-            <Button title="Đăng Ký" onPress={handleRegister} />
-        </View>
-    );
+                </FormControl>
+                <Button mt="2" colorScheme="indigo" onPress={handleRegister}>
+                    Sign up
+                </Button>
+            </VStack>
+        </Box>
+    </Center>;
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#fff',
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-        marginBottom: 16,
-    },
-    halfInput: {
-        flex: 1,
-    },
-    label: {
-        fontSize: 16,
-        marginBottom: 4,
-        color: '#333',
-    },
-    input: {
-        height: 40,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        padding: 8,
-    },
-});
 
 export default RegisterScreen;

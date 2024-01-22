@@ -2,18 +2,17 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ToastAndroid } from 'react-native';
 
 const PaymentSelectionScreen = ({ navigation }) => {
-  const handlePaymentSelection = (paymentMethod) => {
-    // Xử lý chọn hình thức thanh toán tại đây
-    console.log('Selected payment method:', paymentMethod);
-    ToastAndroid.show('Items will be Deliverd SOON!', ToastAndroid.SHORT);
-    navigation.navigate("Home");
+  const handlePaymentSelection = async (paymentMethod) => {
 
-    // Chuyển hướng hoặc thực hiện các bước tiếp theo tùy theo nhu cầu của bạn
+    // Xử lý các hình thức thanh toán khác tại đây
+    console.log(`Selected payment method: ${paymentMethod}`);
+    ToastAndroid.show('Items will be Delivered SOON!', ToastAndroid.SHORT);
+    navigation.navigate('Home');
   };
 
   return (
     <View style={styles.container}>
-        <Text style={styles.headerText}>Chọn phương thức thanh toán</Text>
+      <Text style={styles.headerText}>Chọn phương thức thanh toán</Text>
       <TouchableOpacity onPress={() => handlePaymentSelection('momo')}>
         <View style={styles.paymentOption}>
           <Image
@@ -21,6 +20,16 @@ const PaymentSelectionScreen = ({ navigation }) => {
             style={styles.paymentIcon}
           />
           <Text style={styles.paymentText}>Momo</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => handlePaymentSelection('paypal')}>
+        <View style={styles.paymentOption}>
+          <Image
+            source={require('../databases/images/payment/paypal.png')}
+            style={styles.paymentIcon}
+          />
+          <Text style={styles.paymentText}>Paypal</Text>
         </View>
       </TouchableOpacity>
 
@@ -62,7 +71,7 @@ const styles = StyleSheet.create({
   paymentText: {
     fontSize: 18,
   },
-  headerText:{
+  headerText: {
     fontSize: 18,
     marginBottom: 20,
   },

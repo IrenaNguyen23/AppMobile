@@ -17,6 +17,8 @@ const Home = ({ navigation }) => {
 
   const [products, setProducts] = useState([]);
 
+  const [categories, setCategories] = useState([]);
+
   const [searchKeyword, setSearchKeyword] = useState('');
   const handleSearch = () => {
     // Lọc danh sách sản phẩm dựa trên từ khóa tìm kiếm
@@ -28,6 +30,7 @@ const Home = ({ navigation }) => {
   };
   const resetProducts = () => {
     fetch('https://fakestoreapi.com/products')
+      .then(setSearchKeyword(''))
       .then(res => res.json())
       .then(json => setProducts(json));
   };
@@ -36,7 +39,24 @@ const Home = ({ navigation }) => {
     fetch('https://fakestoreapi.com/products')
       .then(res => res.json())
       .then(json => setProducts(json));
+
+    fetch('https://fakestoreapi.com/products/categories')
+      .then(res => res.json())
+      .then(json => setCategories(json));
   }, [navigation]);
+
+  const groupProductsByCategory = () => {
+    const groupedProducts = {};
+
+    // Tạo đối tượng để lưu trữ sản phẩm theo danh mục
+    categories.forEach(category => {
+      groupedProducts[category] = products.filter(product => product.category === category);
+    });
+
+    return groupedProducts;
+  };
+
+  const groupedProducts = groupProductsByCategory();
 
 
   //create an product reusable card
@@ -213,7 +233,7 @@ const Home = ({ navigation }) => {
             padding: 16,
           }}>
           <TouchableOpacity
-          onPress={() => navigation.navigate('Login')}
+            onPress={() => navigation.navigate('Login')}
           >
             <Entypo
               name="align-left"
@@ -263,10 +283,12 @@ const Home = ({ navigation }) => {
               letterSpacing: 1,
               lineHeight: 24,
             }}>
-            Home Api
+            Home
             {'\n'}This shop offers both products and services
           </Text>
         </View>
+        <View>
+        {Object.keys(groupedProducts).map(category => (
         <View
           style={{
             padding: 16,
@@ -284,12 +306,13 @@ const Home = ({ navigation }) => {
               }}>
               <Text
                 style={{
+                  textTransform: 'uppercase',
                   fontSize: 18,
                   color: COLOURS.black,
                   fontWeight: '500',
                   letterSpacing: 1,
                 }}>
-                Products
+                {category}
               </Text>
               <Text
                 style={{
@@ -299,7 +322,7 @@ const Home = ({ navigation }) => {
                   opacity: 0.5,
                   marginLeft: 10,
                 }}>
-                {products.length}
+                {groupedProducts[category].length}
               </Text>
             </View>
             <Text
@@ -317,10 +340,13 @@ const Home = ({ navigation }) => {
               flexWrap: 'wrap',
               justifyContent: 'space-around',
             }}>
-            {products.map(data => {
-              return <ProductCard data={data} key={data.id} />;
-            })}
+            
+              {groupedProducts[category].map(data => (
+                <ProductCard data={data} key={data.id} />
+              ))}
           </View>
+        </View>
+            ))}
         </View>
       </ScrollView>
     </View>

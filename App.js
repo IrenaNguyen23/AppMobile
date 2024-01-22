@@ -1,4 +1,5 @@
 import React from 'react';
+import { NativeBaseProvider } from 'native-base';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import MyCart from './components/screens/MyCart';
@@ -14,6 +15,7 @@ const App = () => {
   const Stack = createNativeStackNavigator();
   return (
     <NavigationContainer>
+      <NativeBaseProvider>
       <Provider store={store}>
         <Stack.Navigator
           screenOptions={{
@@ -28,6 +30,7 @@ const App = () => {
 
         </Stack.Navigator>
       </Provider>
+      </NativeBaseProvider>
     </NavigationContainer>
   );
 };

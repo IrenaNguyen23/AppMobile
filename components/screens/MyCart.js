@@ -80,11 +80,27 @@ const MyCart = ({navigation}) => {
 
   const checkOut = async () => {
     try {
+      // Lấy dữ liệu từ giỏ hàng
+      const cartItemsString = await AsyncStorage.getItem('cartItems');
+  
+      // Kiểm tra nếu giỏ hàng trống
+      if (!cartItemsString || cartItemsString === '[]') {
+        // Giỏ hàng trống, không thực hiện chuyển hướng
+        console.log('Giỏ hàng trống. Không thể thanh toán.');
+        ToastAndroid.show(
+          'Giỏ hàng trống. Không thể thanh toán.',
+          ToastAndroid.SHORT,
+        );
+        return;
+      }
+  
+      // Giỏ hàng không trống, tiến hành xóa và chuyển hướng đến trang thanh toán
       await AsyncStorage.removeItem('cartItems');
+      navigation.navigate('Payment');
     } catch (error) {
-      return error;
+      console.error('Lỗi khi thực hiện thanh toán:', error);
+      // Có thể xử lý lỗi tại đây hoặc hiển thị thông báo cho người dùng
     }
-    navigation.navigate('Payment');
   };
 
   const renderProducts = (data, index) => {
