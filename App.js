@@ -10,6 +10,7 @@ import SignUpScreen from './components/screens/SignUp';
 import { Provider } from 'react-redux';
 import store from './components/redux/store';
 import PaymentSelectionScreen from './components/screens/Payment';
+import Location from './components/screens/GeoLocation';
 
 const App = () => {
   const Stack = createNativeStackNavigator();
@@ -27,6 +28,7 @@ const App = () => {
           <Stack.Screen name="ProductInfo" component={ProductInfo} />
           <Stack.Screen name="Payment" component={PaymentSelectionScreen} />
           <Stack.Screen name="SignUp" component={SignUpScreen} />
+          <Stack.Screen name="Location" component={Location} />
 
         </Stack.Navigator>
       </Provider>
